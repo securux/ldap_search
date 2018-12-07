@@ -45,6 +45,23 @@ Query group members:
 python3 ldap_search.py groups -q "Domain Admins" -u user1 -p Password1 -d demo.local
 ```
 
+## Queries
+Below are the query options that can be specified using the "-q" argument:
+```
+User
+  active / [None] - All active users (Default)
+  all - All users, even disabled
+  [specific account or email] - lookup user, ex. "m8r0wn"
+  
+group
+  [None] - All domain groups
+  [Specific group name] - lookup group members, ex. "Domain Admins"
+ 
+computer
+  [None] - All Domain Computers
+  eol - look for all end of life systems on domain
+```
+
 ## Options
 ```
 positional arguments:

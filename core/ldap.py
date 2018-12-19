@@ -107,7 +107,7 @@ class LdapEnum():
         self.ldap_query(search, attrs, self.generic_parser)
         return self.data
 
-    def group_query(self, ):
+    def group_query(self,):
         self.data = {}
         # return a list of all domain groups
         attrs = ['distinguishedName', 'cn']

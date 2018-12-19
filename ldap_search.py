@@ -38,18 +38,22 @@ def display_eol(resp):
                 print_success("{:<20}\t(OS: {})".format(v['dNSHostName'], v['operatingSystem']))
 
 def display_all(resp, args):
+    nonverbose = ['cn','dNSHostName','sAMAccountName',]
     for result in resp:
         for k, v in resp[result].items():
             # Print all, including attributes
             if args.verbose or args.lookup_type in ['user', 'users'] and args.query:
                 try:
                     s = v.split(",")
-                    print("{} - {}:".format(result, k))
-                    for x in s:
-                        print("\t{}".format(x))
+                    if len(s) > 1:
+                        print("{}:".format(k))
+                        for x in s:
+                            print("\t{}".format(x))
+                    else:
+                        print("{}:\t{}".format(k, v))
                 except:
-                    print("{} - {}:\t{}".format(result, k, v))
-            else:
+                    print("{}:\t{}".format(k, v))
+            elif k in nonverbose:
                 # Just print result values
                 print(v)
 
@@ -125,7 +129,7 @@ if __name__ == '__main__':
     from getpass import getpass
     from datetime import datetime
 
-    version = '0.0.4'
+    version = '0.0.5'
     try:
         args = argparse.ArgumentParser(description="""
                {0}   (v{1})

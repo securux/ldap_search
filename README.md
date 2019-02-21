@@ -3,7 +3,7 @@
 ![](https://img.shields.io/badge/Python-3.6-blue.svg)&nbsp;&nbsp;
 ![](https://img.shields.io/badge/License-GPL%203.0-green.svg)
 
-LDAP_Search can be used to enumerate Users, Groups, and Computers on a Windows Domain. Authentication can be performed using traditional username and password, or NTLM hash. In addition, this tool has been modified to allow brute force/password-spraying via LDAP. Ldap_Search makes use of [Impackets](https://github.com/SecureAuthCorp/impacket/tree/python36)&nbsp;python36 branch to perform the main operations. (These are the guys that did the real heavy lifting and deserve the credit!)
+LDAP_Search can be used to enumerate Users, Groups, and Computers on a Windows Domain. Authentication can be performed using traditional username and password, or NTLM hash. In addition, this tool has been modified to allow brute force/password-spraying via LDAP. Ldap_Search makes use of [Impackets](https://github.com/SecureAuthCorp/impacket/tree/python36)&nbsp;python36 branch to perform the main operations. (These are the guys that did the real heavy lifting!)
 
 ## Installation
 ```bash

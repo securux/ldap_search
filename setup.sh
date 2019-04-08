@@ -3,8 +3,8 @@
 # Author: m8r0wn
 # Description: ldap_search setup script, installs Impacket for python36 from github
 
-echo -e "[*] Installing Impacket library for Python 3.6"
-git clone -b python36 https://github.com/SecureAuthCorp/impacket impacket
+echo -e "[*] Installing Impacket library"
+git clone https://github.com/SecureAuthCorp/impacket impacket
 cd impacket
 python3 setup.py install
 mv impacket ../impacket36

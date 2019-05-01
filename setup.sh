@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# Author: m8r0wn
-# Description: ldap_search setup script, installs Impacket for python36 from github
-
 echo -e "[*] Installing Impacket library"
 git clone https://github.com/SecureAuthCorp/impacket impacket
 cd impacket

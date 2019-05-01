@@ -5,10 +5,6 @@
 # Description: Class to perform LDAP search queries
 # Credit / Resources: https://github.com/SecureAuthCorp/impacket
 
-# @todo add ability to create custom queries
-# @todo add attributes to predefined searches
-# @todo brute force with hash authentication
-
 from impacket.ldap import ldap
 
 class LdapEnum():
@@ -43,9 +39,9 @@ class LdapEnum():
         # Authentication
         self.ldap_auth(user, passwd, hash, self.domain)
 
-    #########################################
+    ##################################################
     # Ldap Connection & Authentication
-    #########################################
+    ##################################################
     def ldap_connect(self, srv):
         self.con = ldap.LDAPConnection("ldap://{}".format(srv), )
 
@@ -54,9 +50,9 @@ class LdapEnum():
         self.ldaps = True
 
     def ldap_auth(self, user, passwd, hash, domain):
+        lm = ''
+        nt = ''
         if hash:
-            lm = ''
-            nt = ''
             try:
                 lm, nt = hash.split(':')
             except:
@@ -65,6 +61,9 @@ class LdapEnum():
         else:
             self.con.login(user, passwd, domain, '', '')
 
+    ##################################################
+    # Ldap Query Function
+    ##################################################
     def ldap_query(self, searchFilter, attrs, parser):
         sc = ldap.SimplePagedResultsControl(size=9999)
         try:
@@ -73,63 +72,74 @@ class LdapEnum():
         except ldap.LDAPSearchError as e:
             raise Exception("ldap_query error: {}".format(str(e)))
 
-    #########################################
-    # Ldap search Filters
-    #########################################
-    def user_query(self, query):
+    ##################################################
+    # Ldap Search Types
+    ##################################################
+    def user_query(self, query, attrs):
         self.data = {}
-        attrs = ['sAMAccountName']
-        # All users even disabled
+        if not attrs:
+            attrs = ['Name', 'userPrincipalName', 'sAMAccountName', 'mail', 'company', 'department', 'mobile',
+                     'telephoneNumber', 'badPwdCount', 'userWorkstations', 'manager', 'memberOf', 'manager']
+
+        #DEFAULT: Show only active users
+        search = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+
+        # Show all users even disabled
         if query == 'all':
             search = "(&(objectCategory=person)(objectClass=user))"
         # Lookup user by email
         elif '@' in query:
-            attrs = ['Name', 'userPrincipalName', 'sAMAccountName', 'mail', 'company', 'department', 'mobile',
-                     'telephoneNumber', 'badPwdCount', 'userWorkstations', 'manager', 'memberOf', 'manager']
             search = '(&(objectClass=user)(mail:={}))'.format(query.lower())
+
         # Lookup user by username
         elif query and query not in ['active', 'Active']:
-            attrs = ['Name', 'userPrincipalName', 'sAMAccountName', 'mail', 'company', 'department', 'mobile',
-                     'telephoneNumber', 'badPwdCount', 'memberOf', 'userWorkstations', 'manager']
             search = "(&(objectClass=user)(sAMAccountName:={}))".format(query.lower())
-        # DEFAULT: Show only active users
-        else:
-            search = "(&(objectCategory=person)(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+
+        # Execute query
         self.ldap_query(search, attrs, self.generic_parser)
         return self.data
 
-    def computer_query(self, ):
+    def computer_query(self, query, attrs):
+        if not attrs:
+            attrs = ['dNSHostName', 'operatingSystem', 'operatingSystemVersion', 'operatingSystemServicePack']
+
         self.data = {}
-        # return a list of all domain computers
-        attrs = ['dNSHostName', 'operatingSystem', 'operatingSystemVersion', 'operatingSystemServicePack']
-        # attrs = ['dNSHostName']
         search = '(&(objectClass=Computer))'
         self.ldap_query(search, attrs, self.generic_parser)
+
+        # Filter results for end of life operating systems
+        if query == "eol":
+            self.data = self.eol_filter(self.data)
         return self.data
 
-    def group_query(self,):
+    def group_query(self, attrs):
+        if not attrs:
+            attrs = ['distinguishedName', 'cn']
+
         self.data = {}
-        # return a list of all domain groups
-        attrs = ['distinguishedName', 'cn']
         search = '(&(objectCategory=group))'
         self.ldap_query(search, attrs, self.generic_parser)
         return self.data
 
-    def group_membership(self, group):
+    def group_membership(self, group, attrs):
+        if not attrs:
+            attrs = ['member']
+
         self.data = {}
-        # return members of a specific group
-        attrs = ['member']
         search = '(&(objectCategory=group)(cn={}))'.format(group)
         self.ldap_query(search, attrs, self.group_membership_parser)
         return self.data
 
-    def custom_query(self, search, attrs):
-        self.ldap_query(search, attrs, self.generic_parser)
+    def custom_query(self, query, attrs):
+        if not query or not attrs:
+            raise Exception("Query / Attrs not provided for custom LDAP search")
+        self.data = {}
+        self.ldap_query(query, attrs, self.generic_parser)
         return self.data
 
-    #########################################
-    # Ldap Results Parser
-    #########################################
+    ##################################################
+    # LDAP Data Parsers
+    ##################################################
     def generic_parser(self, resp):
         tmp = {}
         dtype = ''
@@ -160,11 +170,19 @@ class LdapEnum():
                     cn = str(member).split(',')[0]
                     search = "(&({}))".format(cn)
                     self.ldap_query(search, attrs, self.generic_parser)
-        except Exception as e:
+        except:
             pass
 
-    def close(self):
-        self.con.close()
+    def eol_filter(self, resp):
+        # Parse results looking for end of life systems
+        data = {}
+        for k, v in resp.items():
+            try:
+                if str(v['operatingSystemVersion']).startswith(('3', '4', '5', '6.0')):
+                    data[k] = v
+            except:
+                pass
+        return data
 
     def categorize(self, tmp):
         # Take temp data, sort and move to class object
@@ -173,3 +191,6 @@ class LdapEnum():
                 self.data[tmp[x].lower()] = tmp
             except:
                 pass
+
+    def close(self):
+        self.con.close()

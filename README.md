@@ -58,7 +58,7 @@ computer
 ```
 
 ## Options
-````
+```
   -q QUERY          Specify user or group to query
   -a ATTRS          Specify attrs to query
   -u USER           Single username

@@ -1,4 +1,5 @@
 *.pyc
 *.DS_STORE
 impacket/*
-*.egg-info
+*.egg-info/
+*.egg
